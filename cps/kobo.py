@@ -1065,6 +1065,16 @@ def HandleInitRequest():
             store_response_json = store_response.json()
             if "Resources" in store_response_json:
                 kobo_resources = store_response_json["Resources"]
+            else:
+               # HACK: This should maybe only happen when we get an "expired token" response?
+               # Btw, the below code was copy-pasted from redirect_or_proxy_request()
+                response_headers = store_response.headers
+                for header_key in CONNECTION_SPECIFIC_HEADERS:
+                    response_headers.pop(header_key, default=None)
+
+                return make_response(
+                    store_response.content, store_response.status_code, response_headers.items()
+                )
         except Exception:
             log.error("Failed to receive or parse response from Kobo's init endpoint. Falling back to un-proxied mode.")
     if not kobo_resources:
